@@ -91,10 +91,79 @@ export class NewsService {
     return this.newsModel.findById(id);
   }
 
-  async update(id: string, data: UpdateNewsInput, image?: string) {
+  async update(
+    id: string,
+    data: UpdateNewsInput,
+    file?: FileUpload,
+    videoFile?: FileUpload,
+  ) {
+    // Extract id and create update data without it
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, ...updateData } = data;
+
+    if (file) {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const { createReadStream, filename } = file;
+      validateImageFile(filename);
+
+      const uniqueFilename = `${Date.now()}-${filename}`;
+      const uploadDir = join(process.cwd(), 'src', 'uploads', 'news');
+      const uploadPath = join(uploadDir, uniqueFilename);
+
+      await new Promise<void>((resolve, reject) => {
+        createReadStream()
+          .pipe(createWriteStream(uploadPath))
+          .on('finish', () => resolve())
+          .on('error', (error) =>
+            reject(new BadRequestException(error.message)),
+          );
+      });
+      updateData.image = `/uploads/news/${uniqueFilename}`;
+    } else if (data.image) {
+      updateData.image = data.image;
+    }
+
+    if (videoFile) {
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      const { createReadStream, filename, mimetype } = videoFile;
+      const allowed = ['video/mp4', 'video/webm', 'video/ogg'];
+      if (!allowed.includes(mimetype))
+        throw new BadRequestException('Only mp4, webm, ogg allowed for videos');
+
+      const uniqueFilename = `${Date.now()}-${filename}`;
+      const uploadDir = join(process.cwd(), 'src', 'uploads', 'videos');
+      const uploadPath = join(uploadDir, uniqueFilename);
+
+      await import('fs').then((fs) => {
+        if (!fs.existsSync(uploadDir))
+          fs.mkdirSync(uploadDir, { recursive: true });
+      });
+
+      const stream = createReadStream();
+      let size = 0;
+      const MAX_SIZE = 25 * 1024 * 1024; // 25 MB
+
+      await new Promise<void>((resolve, reject) => {
+        stream
+          .on('data', (chunk) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            size += chunk.length;
+            if (size > MAX_SIZE)
+              reject(new BadRequestException('Video exceeds 25MB limit'));
+          })
+          .pipe(createWriteStream(uploadPath))
+          .on('finish', () => resolve())
+          .on('error', (err) => reject(new BadRequestException(err.message)));
+      });
+
+      updateData.video = `/uploads/videos/${uniqueFilename}`;
+    } else if (data.video) {
+      updateData.video = data.video;
+    }
+
     return this.newsModel.findByIdAndUpdate(
       id,
-      { ...data, image },
+      updateData as Partial<CreateNewsInput>,
       { new: true },
     );
   }

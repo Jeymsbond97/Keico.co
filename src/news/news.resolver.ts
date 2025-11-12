@@ -1,10 +1,13 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { CreateNewsInput } from './dto/create-news.input';
-// import { UpdateNewsInput } from './dto/update-news.input';
+import { UpdateNewsInput } from './dto/update-news.input';
 import { NewsType } from './news.type';
 import { GraphQLUpload, FileUpload } from 'graphql-upload-ts';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { AdminGuard } from '../common/guards/admin.guard';
 import { join } from 'path';
 import { createWriteStream } from 'fs';
 
@@ -23,6 +26,7 @@ export class NewsResolver {
   }
 
   @Mutation(() => NewsType)
+  @UseGuards(JwtAuthGuard, AdminGuard)
   async createNews(
     @Args('input') input: CreateNewsInput,
     @Args({ name: 'file', type: () => GraphQLUpload, nullable: true })
@@ -31,6 +35,26 @@ export class NewsResolver {
     videoFile?: FileUpload,
   ) {
     return this.newsService.create(input, file, videoFile);
+  }
+
+  @Mutation(() => NewsType)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async updateNews(
+    @Args('input') input: UpdateNewsInput,
+    @Args({ name: 'file', type: () => GraphQLUpload, nullable: true })
+    file?: FileUpload,
+    @Args({ name: 'videoFile', type: () => GraphQLUpload, nullable: true })
+    videoFile?: FileUpload,
+  ) {
+    const { id, ...data } = input;
+    return this.newsService.update(id, input, file, videoFile);
+  }
+
+  @Mutation(() => Boolean)
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async deleteNews(@Args('id') id: string) {
+    await this.newsService.remove(id);
+    return true;
   }
 
   @Mutation(() => [String])

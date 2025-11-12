@@ -24,25 +24,178 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**Keice** is a full-stack news platform built with NestJS (backend) and React (frontend). It features a GraphQL API for managing news articles and inquiries, with a modern, responsive web interface.
 
-## Project setup
+### Features
 
+- 📰 **News Management** - Create, read, and manage news articles with images and videos
+- 📝 **Inquiry System** - Contact form for user inquiries with email notifications
+- 🎨 **Modern Frontend** - Beautiful, responsive React application with Tailwind CSS
+- 🔄 **GraphQL API** - Efficient data fetching with Apollo Server and Apollo Client
+- 📁 **File Uploads** - Support for image and video uploads
+- 🗄️ **MongoDB** - NoSQL database for flexible data storage
+
+### Tech Stack
+
+**Backend:**
+- NestJS (Node.js framework)
+- GraphQL with Apollo Server
+- MongoDB with Mongoose
+- TypeScript
+
+**Frontend:**
+- React 19 with TypeScript
+- Apollo Client for GraphQL
+- React Router for navigation
+- Tailwind CSS for styling
+- Vite for build tooling
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- MongoDB database (local or cloud)
+- Gmail account credentials (for email notifications - optional)
+
+### Backend Setup
+
+1. Install dependencies:
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+2. Create a `.env` file in the root directory:
+```env
+MONGO_DEV=mongodb://localhost:27017/keice
+PORT=3012
+GMAIL_USER=your-email@gmail.com
+GMAIL_PASS=your-app-password
+```
+
+3. Start the backend server:
+```bash
+# development mode (with hot reload)
+npm run start:dev
+
+# production mode
+npm run start:prod
+```
+
+The GraphQL API will be available at `http://localhost:3012/graphql`
+
+### Frontend Setup
+
+1. Navigate to the frontend directory:
+```bash
+cd frontend
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Create a `.env` file:
+```env
+VITE_GRAPHQL_URL=http://localhost:3012/graphql
+```
+
+4. Start the development server:
+```bash
+npm run dev
+```
+
+The frontend will be available at `http://localhost:5173`
+
+### Running Both Servers
+
+To run both backend and frontend simultaneously, you can use two terminal windows or a process manager like `concurrently`:
+
+```bash
+# In the root directory
+npm install -g concurrently
+concurrently "npm run start:dev" "cd frontend && npm run dev"
+```
+
+## Project Structure
+
+```
+Keice-backend/
+├── src/
+│   ├── news/           # News module (articles, images, videos)
+│   ├── inquery/        # Inquiry/contact form module
+│   ├── common/         # Shared utilities, guards, filters
+│   └── app.module.ts   # Main application module
+├── frontend/           # React frontend application
+│   ├── src/
+│   │   ├── pages/      # Page components
+│   │   ├── components/ # Reusable components
+│   │   ├── graphql/    # GraphQL queries
+│   │   └── lib/        # Utilities (Apollo Client)
+│   └── package.json
+└── package.json        # Backend dependencies
+```
+
+## API Endpoints
+
+### GraphQL Playground
+
+Visit `http://localhost:3012/graphql` to access the GraphQL Playground where you can:
+- Explore the API schema
+- Test queries and mutations
+- View documentation
+
+### Available Queries
+
+- `findAllNews` - Get all news articles
+- `findOneNews(id: String!)` - Get a single news article
+- `findAllInqueries` - Get all inquiries (admin)
+
+### Available Mutations
+
+- `createNews(input: CreateNewsInput!, file: Upload, videoFile: Upload)` - Create a news article
+- `createInquery(input: CreateInqueryInput!)` - Submit an inquiry
+- `imagesUploader(files: [Upload!]!, target: String!)` - Upload multiple images
+
+## Frontend Pages
+
+- **Home** (`/`) - Landing page with hero section and latest news preview
+- **News** (`/news`) - List of all news articles
+- **News Detail** (`/news/:id`) - Individual news article view
+- **Contact** (`/contact`) - Inquiry/contact form
+
+## Development
+
+### Backend Commands
 
 ```bash
 # development
-$ npm run start
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# production build
+npm run build
+npm run start:prod
 
-# production mode
-$ npm run start:prod
+# run tests
+npm run test
+npm run test:e2e
+npm run test:cov
+```
+
+### Frontend Commands
+
+```bash
+cd frontend
+
+# development
+npm run dev
+
+# production build
+npm run build
+
+# preview production build
+npm run preview
 ```
 
 ## Run tests

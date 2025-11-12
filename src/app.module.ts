@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { NewsModule } from './news/news.module';
 import { InqueryModule } from './inquery/inquery.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -14,7 +15,9 @@ import { InqueryModule } from './inquery/inquery.module';
       driver: ApolloDriver,
       autoSchemaFile: true,
       playground: true,
+      context: ({ req }) => ({ req }),
     }),
+    AuthModule,
     NewsModule,
     InqueryModule,
   ],
