@@ -1,4 +1,5 @@
 import { ObjectType, Field } from '@nestjs/graphql';
+import { NewsStatus } from './schemas/news.schema';
 
 @ObjectType()
 export class NewsType {
@@ -10,6 +11,9 @@ export class NewsType {
 
   @Field()
   content: string;
+
+  @Field(() => NewsStatus)
+  status: NewsStatus;
 
   @Field({ nullable: true })
   image?: string;

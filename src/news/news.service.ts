@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { News } from './schemas/news.schema';
+import { News, NewsStatus, NewsDocument } from './schemas/news.schema';
 import { CreateNewsInput } from './dto/create-news.input';
 import { UpdateNewsInput } from './dto/update-news.input';
 import { validateImageFile } from '../common/utils/file-validator';
@@ -11,7 +13,7 @@ import { FileUpload } from 'graphql-upload-ts';
 
 @Injectable()
 export class NewsService {
-  constructor(@InjectModel(News.name) private newsModel: Model<News>) {}
+  constructor(@InjectModel(News.name) private newsModel: Model<NewsDocument>) {}
 
   async create(
     data: CreateNewsInput,
@@ -63,7 +65,6 @@ export class NewsService {
       await new Promise<void>((resolve, reject) => {
         stream
           .on('data', (chunk) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             size += chunk.length;
             if (size > MAX_SIZE)
               reject(new BadRequestException('Video exceeds 25MB limit'));
@@ -80,15 +81,35 @@ export class NewsService {
       ...data,
       image: imagePath,
       video: videoPath,
+      status: data.status ?? NewsStatus.PAUSE,
     });
   }
 
-  async findAll() {
-    return this.newsModel.find().sort({ createdAt: -1 });
+  async findAll(
+    page = 1,
+    limit = 4,
+    sort: 'asc' | 'desc' = 'desc',
+    status?: NewsStatus,
+  ) {
+    const query: any = {};
+    if (status) query.status = status;
+
+    const total = await this.newsModel.countDocuments(query);
+    const news = await this.newsModel
+      .find(query)
+      .sort({ createdAt: sort === 'desc' ? -1 : 1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    return { total, news };
   }
 
   async findOne(id: string) {
-    return this.newsModel.findById(id);
+    const result = await this.newsModel.findById(id);
+    if (!result) {
+      throw new BadRequestException('News not found');
+    }
+    return result;
   }
 
   async update(
@@ -97,7 +118,6 @@ export class NewsService {
     file?: FileUpload,
     videoFile?: FileUpload,
   ) {
-    // Extract id and create update data without it
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...updateData } = data;
 
@@ -146,7 +166,6 @@ export class NewsService {
       await new Promise<void>((resolve, reject) => {
         stream
           .on('data', (chunk) => {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             size += chunk.length;
             if (size > MAX_SIZE)
               reject(new BadRequestException('Video exceeds 25MB limit'));
@@ -166,9 +185,5 @@ export class NewsService {
       updateData as Partial<CreateNewsInput>,
       { new: true },
     );
-  }
-
-  async remove(id: string) {
-    return this.newsModel.findByIdAndDelete(id);
   }
 }

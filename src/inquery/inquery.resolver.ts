@@ -12,8 +12,13 @@ export class InqueryResolver {
     return this.inqueryService.create(input);
   }
 
-  @Query(() => InqueryType)
+  @Query(() => [InqueryType])
   async findAllInqueries() {
     return this.inqueryService.findAll();
+  }
+
+  @Query(() => InqueryType)
+  async findOneInquery(@Args('id') id: string) {
+    return this.inqueryService.findOne(id);
   }
 }

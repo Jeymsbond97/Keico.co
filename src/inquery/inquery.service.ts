@@ -15,8 +15,6 @@ export class InqueryService {
   async create(input: CreateInqueryInput) {
     try {
       const result = await this.inqueryModel.create(input);
-
-      // Send email
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -45,5 +43,13 @@ export class InqueryService {
 
   async findAll() {
     return this.inqueryModel.find().sort({ createdAt: -1 });
+  }
+
+  async findOne(id: string) {
+    const result = await this.inqueryModel.findById(id);
+    if (!result) {
+      throw new BadRequestException('Inquiry not found');
+    }
+    return result;
   }
 }

@@ -13,16 +13,19 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   //   app.useGlobalFilters(new HttpExceptionFilter());
   //   app.useGlobalInterceptors(new LoggingInterceptor());
-  app.enableCors({ 
-    origin: true, 
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  app.enableCors({ origin: true, credentials: true });
   app.use(graphqlUploadExpress({ maxFileSize: 15000000, maxFiles: 10 }));
   app.useStaticAssets(join(__dirname, 'src', 'uploads'), {
     prefix: '/uploads',
   });
-  await app.listen(process.env.PORT || 3000);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`🚀 Server: http://localhost:${port}`);
+  console.log(`📊 GraphQL: http://localhost:${port}/graphql`);
 }
-bootstrap();
+
+bootstrap().catch((error) => {
+  console.error('❌ Server error:', error);
+  process.exit(1);
+});
