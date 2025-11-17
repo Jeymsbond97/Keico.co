@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { News, NewsStatus, NewsDocument } from './schemas/news.schema';
 import { CreateNewsInput } from './dto/create-news.input';
 import { UpdateNewsInput } from './dto/update-news.input';
+import { NewsFilterInput } from './dto/news-filter.input';
 import { validateImageFile } from '../common/utils/file-validator';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
@@ -86,22 +86,56 @@ export class NewsService {
   }
 
   async findAll(
-    page = 1,
-    limit = 4,
-    sort: 'asc' | 'desc' = 'desc',
-    status?: NewsStatus,
-  ) {
-    const query: any = {};
-    if (status) query.status = status;
+    input: NewsFilterInput,
+  ): Promise<{ list: NewsDocument[]; metaCounter: Array<{ total: number }> }> {
+    const {
+      page,
+      limit,
+      sort = 'createdAt',
+      direction = 'DESC',
+      search,
+    } = input;
+    const { status } = search || {};
 
-    const total = await this.newsModel.countDocuments(query);
-    const news = await this.newsModel
-      .find(query)
-      .sort({ createdAt: sort === 'desc' ? -1 : 1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
+    if (status === NewsStatus.DELETE) {
+      throw new BadRequestException('DELETE status is not allowed');
+    }
 
-    return { total, news };
+    const match: Record<string, unknown> = {
+      status: status ?? { $ne: NewsStatus.DELETE },
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
+    const sortDirection = direction === 'ASC' ? 1 : -1;
+    const sortField: Record<string, number> = { [sort]: sortDirection };
+
+    const pipeline: any[] = [
+      { $match: match },
+      { $sort: sortField },
+      {
+        $facet: {
+          list: [
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+              $addFields: {
+                id: { $toString: '$_id' },
+              },
+            },
+          ],
+          metaCounter: [{ $count: 'total' }],
+        },
+      },
+    ];
+
+    const result = await this.newsModel.aggregate(pipeline).exec();
+
+    if (!result.length) {
+      return { list: [], metaCounter: [] };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    return result[0];
   }
 
   async findOne(id: string) {

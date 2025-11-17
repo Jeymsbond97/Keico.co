@@ -1,6 +1,11 @@
-import { InputType, Field } from '@nestjs/graphql';
+import { InputType, Field, registerEnumType } from '@nestjs/graphql';
 import { IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
 import { NewsStatus } from '../schemas/news.schema';
+
+registerEnumType(NewsStatus, {
+  name: 'NewsStatus',
+  description: 'News status enum',
+});
 
 @InputType()
 export class CreateNewsInput {
@@ -20,7 +25,7 @@ export class CreateNewsInput {
   @IsOptional()
   video?: string;
 
-  @Field({ nullable: true })
+  @Field(() => NewsStatus, { nullable: true })
   @IsOptional()
   @IsEnum(NewsStatus)
   status?: NewsStatus;

@@ -3,7 +3,8 @@ import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { NewsService } from './news.service';
 import { CreateNewsInput } from './dto/create-news.input';
 import { UpdateNewsInput } from './dto/update-news.input';
-import { NewsType } from './news.type';
+import { NewsType, NewsListType } from './news.type';
+import { NewsFilterInput } from './dto/news-filter.input';
 import { GraphQLUpload, FileUpload } from 'graphql-upload-ts';
 import { join } from 'path';
 import { createWriteStream } from 'fs';
@@ -23,13 +24,13 @@ export class NewsResolver {
     return this.newsService.create(input, file, videoFile);
   }
 
-  @Query(() => [NewsType])
-  findAllNews() {
-    return this.newsService.findAll();
+  @Query(() => NewsListType)
+  async findAllNews(@Args('input') input: NewsFilterInput) {
+    return this.newsService.findAll(input);
   }
 
   @Query(() => NewsType)
-  findOneNews(@Args('id') id: string) {
+  findOneNews(@Args('id', { type: () => String }) id: string) {
     return this.newsService.findOne(id);
   }
 
