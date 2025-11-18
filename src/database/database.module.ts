@@ -21,8 +21,8 @@ export class DatabaseModule {
     if (this.connection.readyState === 1) {
       console.log(
         `Success: MongoDB Connected → ${
-          process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV'
-        } database`,
+          process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'DEVELOPMENT'
+        } DATABASE`,
       );
     } else {
       console.log('Error: MongoDB NOT CONNECTED');
