@@ -25,8 +25,10 @@ export class NewsResolver {
   }
 
   @Query(() => NewsListType)
-  async findAllNews(@Args('input') input: NewsFilterInput) {
-    return this.newsService.findAll(input);
+  async findAllNews(
+    @Args('input', { nullable: true }) input?: NewsFilterInput,
+  ) {
+    return this.newsService.findAll(input || {});
   }
 
   @Query(() => NewsType)
@@ -44,6 +46,12 @@ export class NewsResolver {
   ) {
     const { id } = input;
     return this.newsService.update(id, input, file, videoFile);
+  }
+
+  @Mutation(() => String)
+  async removeNews(@Args('id', { type: () => String }) id: string) {
+    const result = await this.newsService.remove(id);
+    return result.message || 'News successfully removed from database';
   }
 
   @Mutation(() => [String])

@@ -89,21 +89,28 @@ export class NewsService {
     input: NewsFilterInput,
   ): Promise<{ list: NewsDocument[]; metaCounter: Array<{ total: number }> }> {
     const {
-      page,
-      limit,
+      page = 1,
+      limit = 5,
       sort = 'createdAt',
       direction = 'DESC',
       search,
     } = input;
-    const { status } = search || {};
+    const { status = NewsStatus.ACTIVE } = search || {};
 
     if (status === NewsStatus.DELETE) {
       throw new BadRequestException('DELETE status is not allowed');
     }
 
-    const match: Record<string, unknown> = {
-      status: status ?? { $ne: NewsStatus.DELETE },
-    };
+    // Status bo'lmagan documentlarni ACTIVE deb hisoblaymiz (default status ACTIVE)
+    const match: Record<string, unknown> =
+      status === NewsStatus.ACTIVE
+        ? {
+            $or: [
+              { status: NewsStatus.ACTIVE },
+              { status: { $exists: false } },
+            ],
+          }
+        : { status };
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     const sortDirection = direction === 'ASC' ? 1 : -1;
@@ -111,6 +118,13 @@ export class NewsService {
 
     const pipeline: any[] = [
       { $match: match },
+      {
+        $addFields: {
+          status: {
+            $ifNull: ['$status', NewsStatus.ACTIVE],
+          },
+        },
+      },
       { $sort: sortField },
       {
         $facet: {
@@ -152,9 +166,16 @@ export class NewsService {
     file?: FileUpload,
     videoFile?: FileUpload,
   ) {
+    // News mavjudligini tekshirish
+    const existingNews = await this.newsModel.findById(id);
+    if (!existingNews) {
+      throw new BadRequestException('News not found');
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...updateData } = data;
 
+    // Rasm fayl yuklash
     if (file) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const { createReadStream, filename } = file;
@@ -173,10 +194,12 @@ export class NewsService {
           );
       });
       updateData.image = `/uploads/news/${uniqueFilename}`;
-    } else if (data.image) {
+    } else if (data.image !== undefined) {
+      // Agar image string sifatida yuborilsa
       updateData.image = data.image;
     }
 
+    // Video fayl yuklash
     if (videoFile) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const { createReadStream, filename, mimetype } = videoFile;
@@ -210,14 +233,40 @@ export class NewsService {
       });
 
       updateData.video = `/uploads/videos/${uniqueFilename}`;
-    } else if (data.video) {
+    } else if (data.video !== undefined) {
+      // Agar video string sifatida yuborilsa
       updateData.video = data.video;
     }
 
-    return this.newsModel.findByIdAndUpdate(
-      id,
-      updateData as Partial<CreateNewsInput>,
-      { new: true },
-    );
+    // Status DELETE qo'yish mumkin (lekin remove faqat DELETE status'li news'larni o'chiradi)
+
+    const updatedNews = await this.newsModel.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    if (!updatedNews) {
+      throw new BadRequestException('News not found');
+    }
+
+    return updatedNews;
+  }
+
+  async remove(id: string) {
+    const news = await this.newsModel.findById(id);
+    if (!news) {
+      throw new BadRequestException('News not found');
+    }
+
+    // Faqat DELETE status'li news'larni o'chirish mumkin
+    if (news.status !== NewsStatus.DELETE) {
+      throw new BadRequestException(
+        'Only news with DELETE status can be removed. Please change status to DELETE first.',
+      );
+    }
+
+    // Database'dan to'liq o'chirish
+    await this.newsModel.findByIdAndDelete(id);
+
+    return { message: 'News successfully removed from database', id };
   }
 }

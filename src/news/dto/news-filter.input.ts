@@ -21,15 +21,15 @@ export class NewsSearchInput {
 
 @InputType()
 export class NewsFilterInput {
-  @IsNotEmpty()
+  @IsOptional()
   @Min(1)
-  @Field(() => Int)
-  page: number;
+  @Field(() => Int, { nullable: true, defaultValue: 1 })
+  page?: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   @Min(1)
-  @Field(() => Int)
-  limit: number;
+  @Field(() => Int, { nullable: true, defaultValue: 5 })
+  limit?: number;
 
   @IsOptional()
   @Field(() => String, { nullable: true, defaultValue: 'createdAt' })
