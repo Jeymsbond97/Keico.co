@@ -21,6 +21,7 @@ export class NewsResolver {
     @Args({ name: 'videoFile', type: () => GraphQLUpload, nullable: true })
     videoFile?: FileUpload,
   ) {
+    console.log('Mutation: createNews');
     return this.newsService.create(input, file, videoFile);
   }
 
@@ -28,11 +29,13 @@ export class NewsResolver {
   async findAllNews(
     @Args('input', { nullable: true }) input?: NewsFilterInput,
   ) {
+    console.log('Query: FindAllNews');
     return this.newsService.findAll(input || {});
   }
 
   @Query(() => NewsType)
   findOneNews(@Args('id', { type: () => String }) id: string) {
+    console.log('Query: findOneNews');
     return this.newsService.findOne(id);
   }
 
@@ -45,12 +48,14 @@ export class NewsResolver {
     videoFile?: FileUpload,
   ) {
     const { id } = input;
+    console.log('Mutation: updateNews');
     return this.newsService.update(id, input, file, videoFile);
   }
 
   @Mutation(() => String)
   async removeNews(@Args('id', { type: () => String }) id: string) {
     const result = await this.newsService.remove(id);
+    console.log('Mutation: removeNews');
     return result.message || 'News successfully removed from database';
   }
 
@@ -101,6 +106,7 @@ export class NewsResolver {
       }),
     );
 
+    console.log('Images uploaded successfully');
     return uploadedImages;
   }
 
@@ -151,6 +157,7 @@ export class NewsResolver {
       }),
     );
 
+    console.log('Videos uploaded successfully');
     return uploadedVideos;
   }
 }

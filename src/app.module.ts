@@ -4,7 +4,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { NewsModule } from './news/news.module';
-import { InqueryModule } from './inquery/inquery.module';
+import { DatabaseModule } from './database/database.module';
+// import { InqueryModule } from './inquery/inquery.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { InqueryModule } from './inquery/inquery.module';
       playground: true,
     }),
     NewsModule,
-    InqueryModule,
+    DatabaseModule,
+    // InqueryModule,
   ],
 })
 export class AppModule {}

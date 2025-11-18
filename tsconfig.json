@@ -18,5 +18,6 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["node_modules", "dist", "frontend", "test", "scripts"]
+  "exclude": ["node_modules", "dist", "frontend", "process.config.js", "test", "scripts"]
+
 }
