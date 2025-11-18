@@ -5,6 +5,7 @@
     "test",
     "dist",
     "frontend",
+    "admin",
     "scripts",
     "process.config.js",
     "**/*spec.ts"

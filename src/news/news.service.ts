@@ -15,11 +15,37 @@ import { FileUpload } from 'graphql-upload-ts';
 export class NewsService {
   constructor(@InjectModel(News.name) private newsModel: Model<NewsDocument>) {}
 
+  private sanitizeFilename(filename: string): string {
+    // Extract extension and name separately
+    const lastDotIndex = filename.lastIndexOf('.');
+    const name =
+      lastDotIndex > 0 ? filename.substring(0, lastDotIndex) : filename;
+    const extension = lastDotIndex > 0 ? filename.substring(lastDotIndex) : '';
+
+    // Sanitize name part
+    const sanitizedName = name
+      .replace(/\s+/g, '_') // Replace spaces with underscore
+      .replace(/[^a-zA-Z0-9_-]/g, '') // Remove special characters except _ -
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+      .toLowerCase();
+
+    return sanitizedName + extension.toLowerCase();
+  }
+
   async create(
     data: CreateNewsInput,
     file?: FileUpload,
     videoFile?: FileUpload,
   ) {
+    // Check if title already exists
+    const existingNews = await this.newsModel.findOne({
+      title: data.title.trim(),
+      status: { $ne: NewsStatus.DELETE },
+    });
+    if (existingNews) {
+      throw new BadRequestException('News with this title already exists');
+    }
+
     let imagePath: string | null = data.image ?? null;
     let videoPath: string | null = data.video ?? null;
     if (file) {
@@ -27,9 +53,17 @@ export class NewsService {
       const { createReadStream, filename } = file;
       validateImageFile(filename);
 
-      const uniqueFilename = `${Date.now()}-${filename}`;
+      const sanitizedFilename = this.sanitizeFilename(filename);
+      const uniqueFilename = `${Date.now()}-${sanitizedFilename}`;
       const uploadDir = join(process.cwd(), 'src', 'uploads', 'news');
       const uploadPath = join(uploadDir, uniqueFilename);
+
+      // Ensure directory exists
+      await import('fs').then((fs) => {
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+      });
 
       await new Promise<void>((resolve, reject) => {
         createReadStream()
@@ -49,13 +83,16 @@ export class NewsService {
       if (!allowed.includes(mimetype))
         throw new BadRequestException('Only mp4, webm, ogg allowed for videos');
 
-      const uniqueFilename = `${Date.now()}-${filename}`;
+      const sanitizedFilename = this.sanitizeFilename(filename);
+      const uniqueFilename = `${Date.now()}-${sanitizedFilename}`;
       const uploadDir = join(process.cwd(), 'src', 'uploads', 'videos');
       const uploadPath = join(uploadDir, uniqueFilename);
 
+      // Ensure directory exists
       await import('fs').then((fs) => {
-        if (!fs.existsSync(uploadDir))
+        if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });
+        }
       });
 
       const stream = createReadStream();
@@ -95,22 +132,16 @@ export class NewsService {
       direction = 'DESC',
       search,
     } = input;
-    const { status = NewsStatus.ACTIVE } = search || {};
+    const { status } = search || {};
 
-    if (status === NewsStatus.DELETE) {
-      throw new BadRequestException('DELETE status is not allowed');
-    }
-
-    // Status bo'lmagan documentlarni ACTIVE deb hisoblaymiz (default status ACTIVE)
-    const match: Record<string, unknown> =
-      status === NewsStatus.ACTIVE
-        ? {
-            $or: [
-              { status: NewsStatus.ACTIVE },
-              { status: { $exists: false } },
-            ],
-          }
-        : { status };
+    const match: Record<string, unknown> = status
+      ? { status }
+      : {
+          $or: [
+            { status: { $ne: NewsStatus.DELETE } },
+            { status: { $exists: false } },
+          ],
+        };
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
     const sortDirection = direction === 'ASC' ? 1 : -1;
@@ -166,24 +197,41 @@ export class NewsService {
     file?: FileUpload,
     videoFile?: FileUpload,
   ) {
-    // News mavjudligini tekshirish
     const existingNews = await this.newsModel.findById(id);
     if (!existingNews) {
       throw new BadRequestException('News not found');
     }
 
+    // Check if title is being changed and if new title already exists
+    if (data.title && data.title.trim() !== existingNews.title) {
+      const titleExists = await this.newsModel.findOne({
+        title: data.title.trim(),
+        _id: { $ne: id },
+        status: { $ne: NewsStatus.DELETE },
+      });
+      if (titleExists) {
+        throw new BadRequestException('News with this title already exists');
+      }
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...updateData } = data;
 
-    // Rasm fayl yuklash
     if (file) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const { createReadStream, filename } = file;
       validateImageFile(filename);
 
-      const uniqueFilename = `${Date.now()}-${filename}`;
+      const sanitizedFilename = this.sanitizeFilename(filename);
+      const uniqueFilename = `${Date.now()}-${sanitizedFilename}`;
       const uploadDir = join(process.cwd(), 'src', 'uploads', 'news');
       const uploadPath = join(uploadDir, uniqueFilename);
+
+      await import('fs').then((fs) => {
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+      });
 
       await new Promise<void>((resolve, reject) => {
         createReadStream()
@@ -199,7 +247,6 @@ export class NewsService {
       updateData.image = data.image;
     }
 
-    // Video fayl yuklash
     if (videoFile) {
       // eslint-disable-next-line @typescript-eslint/unbound-method
       const { createReadStream, filename, mimetype } = videoFile;
@@ -207,7 +254,8 @@ export class NewsService {
       if (!allowed.includes(mimetype))
         throw new BadRequestException('Only mp4, webm, ogg allowed for videos');
 
-      const uniqueFilename = `${Date.now()}-${filename}`;
+      const sanitizedFilename = this.sanitizeFilename(filename);
+      const uniqueFilename = `${Date.now()}-${sanitizedFilename}`;
       const uploadDir = join(process.cwd(), 'src', 'uploads', 'videos');
       const uploadPath = join(uploadDir, uniqueFilename);
 
@@ -264,7 +312,6 @@ export class NewsService {
       );
     }
 
-    // Database'dan to'liq o'chirish
     await this.newsModel.findByIdAndDelete(id);
 
     return { message: 'News successfully removed from database', id };
