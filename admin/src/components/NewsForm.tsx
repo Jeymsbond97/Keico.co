@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { uploadWithFiles } from '../lib/apollo-client';
@@ -22,6 +23,7 @@ import { Close } from '@mui/icons-material';
 import { CREATE_NEWS, UPDATE_NEWS } from '../graphql/queries';
 import { NewsStatus, type News } from '../types';
 import { gql } from '@apollo/client';
+import type { T } from '../lib/common/types';
 
 interface NewsFormProps {
   news: News | null;
@@ -83,9 +85,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
         return;
       }
       setImageFile(file);
-      // Hide existing image when new one is uploaded
       setExistingImageUrl(null);
-      // Create preview for newly uploaded image
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -107,9 +107,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
         return;
       }
       setVideoFile(file);
-      // Hide existing video when new one is uploaded
       setExistingVideoUrl(null);
-      // Create preview for newly uploaded video
       const reader = new FileReader();
       reader.onloadend = () => {
         setVideoPreview(reader.result as string);
@@ -121,8 +119,6 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
   const handleRemoveImage = () => {
     setImageFile(null);
     setImagePreview(null);
-    // Don't restore existing image - user cancelled the new upload
-    // Reset file input
     const fileInput = document.querySelector('input[type="file"][accept="image/*"]') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
@@ -130,21 +126,17 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
   const handleRemoveVideo = () => {
     setVideoFile(null);
     setVideoPreview(null);
-    // Don't restore existing video - user cancelled the new upload
-    // Reset file input
     const fileInput = document.querySelector('input[type="file"][accept*="video"]') as HTMLInputElement;
     if (fileInput) fileInput.value = '';
   };
 
   const handlePreviewImage = () => {
     console.log('Preview image clicked:', { existingImageUrl, imageFile, imagePreview });
-    // For existing uploaded images (priority)
     if (existingImageUrl) {
       console.log('Setting preview to existing image:', existingImageUrl);
       setImagePreview(existingImageUrl);
       return;
     }
-    // For newly uploaded images (before save)
     if (imageFile && imagePreview) {
       console.log('Setting preview to new image:', imagePreview);
       setImagePreview(imagePreview);
@@ -155,13 +147,11 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
 
   const handlePreviewVideo = () => {
     console.log('Preview video clicked:', { existingVideoUrl, videoFile, videoPreview });
-    // For existing uploaded videos (priority)
     if (existingVideoUrl) {
       console.log('Setting preview to existing video:', existingVideoUrl);
       setVideoPreview(existingVideoUrl);
       return;
     }
-    // For newly uploaded videos (before save)
     if (videoFile && videoPreview) {
       console.log('Setting preview to new video:', videoPreview);
       setVideoPreview(videoPreview);
@@ -209,7 +199,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
               }
             }
           `;
-      const input: any = news
+      const input: T = news
         ? {
             id: news.id,
             title: title.trim(),
@@ -222,8 +212,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
             status,
           };
 
-      let result: any;
-      // If files are present, use multipart upload
+      let result: T;
       if (imageFile || videoFile) {
         result = await uploadWithFiles(
           mutation,
@@ -238,7 +227,6 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
           throw new Error(result.errors[0]?.message || 'Upload failed');
         }
       } else {
-        // No files, use regular mutation
         if (news) {
           result = await updateNews({
             variables: {
@@ -262,9 +250,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
             ? responseData.image
             : `${window.location.origin}${responseData.image}`;
           setExistingImageUrl(imageUrl);
-          // Don't clear preview - keep it for immediate viewing
         } else {
-          // If no image in response, clear existing
           setExistingImageUrl(null);
         }
         if (responseData.video) {
@@ -272,9 +258,7 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
             ? responseData.video
             : `${window.location.origin}${responseData.video}`;
           setExistingVideoUrl(videoUrl);
-          // Don't clear preview - keep it for immediate viewing
         } else {
-          // If no video in response, clear existing
           setExistingVideoUrl(null);
         }
       }
@@ -286,7 +270,6 @@ export default function NewsForm({ news, onSuccess, onCancel }: NewsFormProps) {
       setVideoPreview(null);
 
       onSuccess();
-      // Refetch stats in parent component will be handled by refetch
     } catch (err: any) {
       setError(err.message || 'An error occurred');
       console.error('Form error:', err);

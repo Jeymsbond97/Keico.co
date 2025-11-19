@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { print } from 'graphql';
 
@@ -18,7 +19,6 @@ export const apolloClient = new ApolloClient({
   },
 });
 
-// Helper function for file uploads using multipart/form-data
 export async function uploadWithFiles(
   mutation: string | any,
   variables: Record<string, any>,

@@ -25,7 +25,7 @@ export default function Login() {
     setError('');
 
     if (!username || !password) {
-      setError('Username va password kiriting');
+      setError('Enter Username and Password');
       return;
     }
 
@@ -34,9 +34,9 @@ export default function Login() {
       navigate('/admin/dashboard');
     } else {
       if (username !== 'Keicoplus_admin') {
-        setError('Username xato');
+        setError('Username is incorrect');
       } else {
-        setError('Password xato');
+        setError('Password is incorrect');
       }
     }
   };
