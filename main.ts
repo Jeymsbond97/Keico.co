@@ -70,6 +70,6 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  console.error('❌ Server error:', error);
+  console.error('Server error:', error);
   process.exit(1);
 });

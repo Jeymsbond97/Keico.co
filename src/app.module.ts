@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { NewsModule } from './news/news.module';
+import { ProductModule } from './product/product.module';
 import { DatabaseModule } from './database/database.module';
 import { T } from './common/types/common';
 // import { InqueryModule } from './inquery/inquery.module';
@@ -31,6 +32,7 @@ import { T } from './common/types/common';
       },
     }),
     NewsModule,
+    ProductModule,
     DatabaseModule,
     // InqueryModule,
   ],

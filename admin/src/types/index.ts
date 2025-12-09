@@ -34,3 +34,26 @@ export interface NewsFilterInput {
   };
 }
 
+export interface Product {
+  id: string;
+  title: string;
+  description: string;
+  image?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductListResponse {
+  findAllProducts: {
+    list: Product[];
+    metaCounter: Array<{ total: number }>;
+  };
+}
+
+export interface ProductFilterInput {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  direction?: 'ASC' | 'DESC';
+}
+
