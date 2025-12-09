@@ -58,7 +58,6 @@ export class NewsService {
       const uploadDir = join(process.cwd(), 'src', 'uploads', 'news');
       const uploadPath = join(uploadDir, uniqueFilename);
 
-      // Ensure directory exists
       await import('fs').then((fs) => {
         if (!fs.existsSync(uploadDir)) {
           fs.mkdirSync(uploadDir, { recursive: true });

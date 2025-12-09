@@ -25,11 +25,13 @@ To create an admin user, you can use the GraphQL Playground at `http://localhost
 
 ```graphql
 mutation {
-  register(input: {
-    email: "admin@keico.com"
-    password: "admin123"
-    name: "Admin User"
-  }) {
+  register(
+    input: {
+      email: "admin@keico.com"
+      password: "admin123"
+      name: "Admin User"
+    }
+  ) {
     token
     user {
       id
@@ -44,6 +46,7 @@ mutation {
 Then manually update the user role to "admin" in MongoDB or create a script to do this.
 
 Alternatively, you can use the seed script (requires ts-node):
+
 ```bash
 npx ts-node scripts/seed-admin.ts
 ```
@@ -65,25 +68,27 @@ npm run dev
 
 ### 4. Access the Application
 
-- **Frontend**: http://localhost:5173
-- **GraphQL Playground**: http://localhost:3012/graphql
-- **Admin Dashboard**: http://localhost:5173/admin_1
+- **Frontend**: <http://localhost:5173>
+- **GraphQL Playground**: <http://localhost:3012/graphql>
+- **Admin Dashboard**: <http://localhost:5173/admin_1>
 
 ## 📝 Default Admin Credentials
 
-- **Email**: admin@keico.com
+- **Email**: <admin@keico.com>
 - **Password**: admin123
 
 ⚠️ **Important**: Change these credentials in production!
 
 ## 🎯 Features
 
-### For Regular Users:
+### For Regular Users
+
 - ✅ View news articles
 - ✅ Submit inquiries/contact form
 - ✅ Browse company information (About, Services, Products, Team, History, Certificates)
 
-### For Admin Users:
+### For Admin Users
+
 - ✅ Create, edit, and delete news articles
 - ✅ Upload images and videos for news
 - ✅ Access admin dashboard at `/admin_1`
@@ -114,12 +119,14 @@ npm run dev
 ## 📦 Adding Sample News
 
 You can add news through:
+
 1. Admin dashboard at `/admin_1` (after logging in as admin)
 2. GraphQL Playground (requires admin token)
 
 ## 🛠️ Technology Stack
 
 **Backend:**
+
 - NestJS
 - GraphQL (Apollo Server)
 - MongoDB (Mongoose)
@@ -127,6 +134,7 @@ You can add news through:
 - TypeScript
 
 **Frontend:**
+
 - React 19
 - TypeScript
 - Apollo Client
@@ -137,4 +145,3 @@ You can add news through:
 ## 📞 Support
 
 For issues or questions, please contact the development team.
-

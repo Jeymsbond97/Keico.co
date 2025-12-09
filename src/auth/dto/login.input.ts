@@ -12,4 +12,3 @@ export class LoginInput {
   @IsNotEmpty()
   password: string;
 }
-

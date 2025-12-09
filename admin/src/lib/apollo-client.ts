@@ -25,7 +25,7 @@ export async function uploadWithFiles(
   files: { file?: File; videoFile?: File },
 ) {
   const formData = new FormData();
-  
+
   // Convert GraphQL DocumentNode to string if needed
   let mutationString = mutation;
   if (typeof mutation !== 'string') {
@@ -54,10 +54,13 @@ export async function uploadWithFiles(
 
   // IMPORTANT: operations and map must come FIRST, then files
   // This follows GraphQL multipart request spec
-  formData.append('operations', JSON.stringify({
-    query: mutationString,
-    variables: finalVariables,
-  }));
+  formData.append(
+    'operations',
+    JSON.stringify({
+      query: mutationString,
+      variables: finalVariables,
+    }),
+  );
   formData.append('map', JSON.stringify(map));
 
   // Append files AFTER operations and map
@@ -83,4 +86,3 @@ export async function uploadWithFiles(
 
   return response.json();
 }
-

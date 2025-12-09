@@ -63,10 +63,13 @@ export default function Login() {
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <EnergySavingsLeaf
-              sx={{ fontSize: 60, color: '#667eea', mb: 2 }}
-            />
-            <Typography variant="h4" component="h1" fontWeight="bold" color="primary">
+            <EnergySavingsLeaf sx={{ fontSize: 60, color: '#667eea', mb: 2 }} />
+            <Typography
+              variant="h4"
+              component="h1"
+              fontWeight="bold"
+              color="primary"
+            >
               KEICO PLUS
             </Typography>
             <Typography variant="subtitle1" color="text.secondary" mt={1}>
@@ -123,7 +126,8 @@ export default function Login() {
                 py: 1.5,
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 '&:hover': {
-                  background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                  background:
+                    'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
                 },
               }}
             >
@@ -135,4 +139,3 @@ export default function Login() {
     </Box>
   );
 }
-
