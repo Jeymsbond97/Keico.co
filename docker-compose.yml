@@ -1,0 +1,66 @@
+services:
+  keice-backend:
+    container_name: keice-backend
+    image: node:22-alpine
+    restart: unless-stopped
+
+    ports:
+      - '3011:3011'
+
+    volumes:
+      - ./:/usr/src/keice-backend
+      - backend_node_modules:/usr/src/keice-backend/node_modules
+      - admin_node_modules:/usr/src/keice-backend/admin/node_modules
+
+    working_dir: /usr/src/keice-backend
+
+    environment:
+      - NODE_ENV=production
+      - PORT=3011
+      - TZ=UTC
+
+    env_file:
+      - .env
+
+    networks:
+      - monorepo_network
+
+    command: >
+      sh -c "
+        apk add --no-cache bash &&
+        echo '=== Installing backend dependencies ===' &&
+        npm install --include=dev &&
+        echo '=== Installing admin dependencies ===' &&
+        cd admin && npm install && cd .. &&
+        echo '=== Building backend ===' &&
+        npm run build 2>&1 &&
+        echo '=== Starting production server ===' &&
+        npm run start:prod
+      "
+
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "require('http').get('http://localhost:3011/graphql', (r) => {process.exit(r.statusCode === 200 || r.statusCode === 400 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  backend_node_modules:
+  admin_node_modules:
+
+networks:
+  monorepo_network:
+    driver: bridge

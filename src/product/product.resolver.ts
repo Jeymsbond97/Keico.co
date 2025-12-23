@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { ProductService } from './product.service';
 import { CreateProductInput } from './dto/create-product.input';
@@ -53,4 +52,3 @@ export class ProductResolver {
     return result.message || 'Product successfully removed from database';
   }
 }
-

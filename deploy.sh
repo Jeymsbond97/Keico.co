@@ -3,13 +3,10 @@
 # PRODUCTION
 
 git reset --hard
-git checkout master
-git pull origin master
+git checkout develop
+git pull origin develop
 
-npm i
-npm run build
-pm2 start process.config.js --env production
-
+docker compose up -d
 
 
 # DEVELOPMENT
