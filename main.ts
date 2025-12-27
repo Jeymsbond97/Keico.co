@@ -60,9 +60,9 @@ async function bootstrap() {
     console.log(`Error: Admin panel not at: ${adminDistPath}`);
   }
 
-  const port = process.env.PORT || 3005;
-  await app.listen(port);
-  console.log(`Server: http://localhost:${port}`);
+  const port = process.env.PORT || 3011;
+  await app.listen(port, '0.0.0.0');
+  console.log(`Server: http://0.0.0.0:${port}`);
   console.log(`GraphQL: http://localhost:${port}/graphql`);
   if (existsSync(adminDistPath)) {
     console.log(`Admin Panel: http://localhost:${port}/admin`);

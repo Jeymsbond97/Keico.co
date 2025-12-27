@@ -31,9 +31,11 @@ services:
         echo '=== Installing backend dependencies ===' &&
         npm install --include=dev &&
         echo '=== Installing admin dependencies ===' &&
-        cd admin && npm install && cd .. &&
+        cd admin && npm install --include=dev && cd .. &&
         echo '=== Building backend ===' &&
-        npm run build 2>&1 &&
+        ./node_modules/.bin/nest build 2>&1 &&
+        echo '=== Building admin ===' &&
+        cd admin && npm run build 2>&1 && cd .. &&
         echo '=== Starting production server ===' &&
         npm run start:prod
       "

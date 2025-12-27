@@ -19,6 +19,7 @@ import { T } from './common/types/common';
       driver: ApolloDriver,
       autoSchemaFile: true,
       playground: true,
+      csrfPrevention: false,
       formatError: (error: T) => {
         const graphQLFormatedError = {
           code: error?.extensions?.code,
