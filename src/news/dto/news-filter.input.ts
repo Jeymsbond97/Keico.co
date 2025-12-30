@@ -1,5 +1,5 @@
 import { InputType, Field, Int, registerEnumType } from '@nestjs/graphql';
-import { IsNotEmpty, IsOptional, IsEnum, Min } from 'class-validator';
+import { IsOptional, IsEnum, Min } from 'class-validator';
 import { NewsStatus } from '../schemas/news.schema';
 
 export enum SortDirection {
